@@ -12,6 +12,8 @@ fastapi = {extras = ["all"], version = "^0.98.0"}
 sqlalchemy = "^2.0.17"
 psycopg2-binary = "^2.9.6"
 python-multipart = "^0.0.6"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 
 
 [build-system]
