@@ -14,14 +14,3 @@ class User(Base):
     promotion_date = Column(DateTime)
     is_active = Column(Boolean, default=True)
 
-    token = relationship("Token", back_populates="user")
-
-
-class Token(Base):
-    __tablename__ = 'token'
-    id = Column(Integer, primary_key=True, index=True)
-    token = Column(String, unique=True)
-    expires = Column(DateTime)
-    user_id = Column(Integer, ForeignKey("users.id"))
-
-    user = relationship("User", back_populates="token")

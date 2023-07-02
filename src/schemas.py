@@ -1,22 +1,6 @@
 from pydantic import BaseModel
 
 
-class TokenBase(BaseModel):
-    token: str
-
-
-class TokenCreate(TokenBase):
-    pass
-
-
-class Token(TokenBase):
-    id: int
-    user_id: int
-
-    class Config:
-        orm_mode = True
-
-
 class UserBase(BaseModel):
     username: str
 
@@ -25,11 +9,21 @@ class UserCreate(UserBase):
     password: str
 
 
-class User(UserBase):
-    id: int
-    is_active: bool
-    token: list[Token] = []
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-    class Config:
-        orm_mode=True
-        
+
+class TokenData(BaseModel):
+    username: str | None = None
+
+
+class User(BaseModel):
+    username: str
+    salary: int | None = None
+    promotion_date: str | None = None
+    is_active: bool | None = None
+
+
+class UserInDB(User):
+    hashed_password: str
