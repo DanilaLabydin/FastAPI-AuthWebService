@@ -5,7 +5,7 @@ from database import Base
 
 
 class User(Base):
-    __tablename__ = 'user'
+    __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
@@ -22,6 +22,6 @@ class Token(Base):
     id = Column(Integer, primary_key=True, index=True)
     token = Column(String, unique=True)
     expires = Column(DateTime)
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
 
     user = relationship("User", back_populates="token")
