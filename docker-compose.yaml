@@ -1,0 +1,20 @@
+version: '3.3'
+
+services:
+  postgres-container:
+    image: postgres:15-alpine
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+       POSTGRES_USER: fastapi_auth_user
+       POSTGRES_PASSWORD: sample
+       POSTGRES_DB: fastapi_auth_db
+    volumes:
+       - ./data:/var/lib/postgresql/data
+       - ./src/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build: .
+    ports:
+      - 8000:8000
