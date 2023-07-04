@@ -29,15 +29,5 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-# class User(BaseModel):
-#     username: str
-#     salary: int | None = None
-#     promotion_date: str | None = None
-#     is_active: bool | None = None
-
-#     class Config:
-#         orm_mode = True
-
-
 class UserInDB(User):
     hashed_password: str

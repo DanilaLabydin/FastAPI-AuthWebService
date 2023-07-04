@@ -36,15 +36,6 @@ def read_user(username: str, db: Session = Depends(get_db)):
                     is_active=db_user.is_active
                     )
 
-    
-
-class User(BaseModel):
-    username: str
-    salary: int | None = None
-    promotion_date: str | None = None
-    is_active: bool | None = None
-
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -129,14 +120,14 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 
 @app.get("/users/me")
 async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
-    return current_user
+    return {'username' : current_user.username, 'salary': current_user.salary}
 
 
 @app.post("/register/")
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    print(user)
     db_user = crud.get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="username already exists")
     user.password = get_password_hash(user.password)
-    return crud.create_user(db, user=user)
+    new_user = crud.create_user(db, user=user)
+    return {'id': new_user.id, 'username': new_user.username}
