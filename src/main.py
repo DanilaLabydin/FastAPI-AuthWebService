@@ -32,19 +32,11 @@ def read_user(username: str, db: Session = Depends(get_db)):
     return UserInDB(username=db_user.username,
                     hashed_password=db_user.hashed_password,
                     salary=db_user.salary,
-                    promotion_date=db_user.promotion_date,
+                    promotion_date=str(db_user.promotion_date),
                     is_active=db_user.is_active
                     )
 
     
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    username: str | None = None
-
 
 class User(BaseModel):
     username: str
@@ -52,9 +44,6 @@ class User(BaseModel):
     promotion_date: str | None = None
     is_active: bool | None = None
 
-
-class UserInDB(User):
-    hashed_password: str
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -118,7 +107,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
     return user
 
 
-async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
+async def get_current_active_user(current_user: Annotated[schemas.User, Depends(get_current_user)]):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
@@ -143,8 +132,9 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_active
     return current_user
 
 
-@app.post("/register/", response_model=schemas.User)
+@app.post("/register/")
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    print(user)
     db_user = crud.get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="username already exists")
