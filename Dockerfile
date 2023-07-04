@@ -3,7 +3,7 @@ FROM python:3.10-slim
 RUN mkdir -m 777 /app
 
 RUN pip install poetry==1.3.2
-COPY ./src/database.ini ./src/.env poetry.lock pyproject.toml /app/
+COPY ./src/database.ini .env poetry.lock pyproject.toml /app/
 
 WORKDIR /app/
 

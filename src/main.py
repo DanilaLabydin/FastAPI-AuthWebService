@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from . models import Base
-from . crud import get_user_by_username
+from . crud import get_user_by_username, create_user
 from . database import SessionLocal, engine
 from . config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from . schemas import UserBase, UserCreate, User, Token, TokenData, UserInDB
@@ -124,7 +124,7 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_active
 
 
 @app.post("/register/")
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user_by_username(db=db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="username already exists")
