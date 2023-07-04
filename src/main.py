@@ -8,10 +8,10 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-import crud, models, schemas
+import crud, models
 from database import SessionLocal, engine
 from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from schemas import Token, TokenData, User, UserInDB
+from schemas import UserBase, UserCreate, User, Token, TokenData, UserInDB
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -91,14 +91,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    # user = get_user(fake_users_db, username=token_data.username)
     user = read_user(username=token_data.username, db=db)
     if user is None:
         raise credentials_exception
     return user
 
 
-async def get_current_active_user(current_user: Annotated[schemas.User, Depends(get_current_user)]):
+async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
@@ -124,7 +123,7 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_active
 
 
 @app.post("/register/")
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="username already exists")
