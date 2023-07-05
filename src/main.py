@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Annotated
+import logging
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
@@ -15,6 +16,7 @@ from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from .schemas import UserCreate, User, Token, TokenData, UserInDB
 
 
+LOGGER = logging.getLogger(__name__)
 Base.metadata.create_all(bind=engine)
 
 
@@ -31,13 +33,19 @@ def read_user(username: str, db: Session = Depends(get_db)):
     db_user = get_user_by_username(db, username)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return UserInDB(
-        username=db_user.username,
-        hashed_password=db_user.hashed_password,
-        salary=db_user.salary,
-        promotion_date=str(db_user.promotion_date),
-        is_active=db_user.is_active,
-    )
+
+    try:
+        user = UserInDB(
+            username=db_user.username,
+            hashed_password=db_user.hashed_password,
+            salary=db_user.salary,
+            promotion_date=str(db_user.promotion_date),
+            is_active=db_user.is_active,
+        )
+        return user
+    except Exception as e:
+        LOGGER.error(f"Error reading user: {e}")
+        return None
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -102,14 +110,6 @@ async def get_current_user(
     return user
 
 
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)]
-):
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
-
-
 @app.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -130,9 +130,7 @@ async def login_for_access_token(
 
 
 @app.get("/users/me")
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-):
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return {
         "username": current_user.username,
         "salary": current_user.salary,
@@ -147,4 +145,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="username already exists")
     user.password = get_password_hash(user.password)
     new_user = create_user(db, user=user)
+    if new_user is None:
+        raise HTTPException(status_code=500, detail="db could not create the user")
+
     return {"id": new_user.id, "username": new_user.username}
